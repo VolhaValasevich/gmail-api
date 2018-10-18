@@ -1,5 +1,4 @@
 const { google } = require('googleapis');
-const fs = require('fs');
 const logger = require('./logger').logger;
 
 class MailFunctions {
@@ -36,6 +35,36 @@ class MailFunctions {
                 resolve(response.data.messages);
             })
         })
+    }
+
+    sendMessage(auth, content) {
+        const gmail = google.gmail({ version: 'v1', auth });
+        const message = {
+            auth: auth,
+            userId: 'me',
+            resource: {
+                raw: this.encryptMessage(content.to, content.from, content.subject, content.message)
+            }
+        } 
+        return new Promise((resolve, reject) => {
+            gmail.users.messages.send(message, (err, response) => {
+                if (err) reject(err);
+                resolve(response);
+            });
+        })
+    }
+
+    encryptMessage(to, from, subject, message) {
+        const str = ['Content-Type: text/plain; charset=\"UTF-8\"\n',
+            'MIME-Version: 1.0\n',
+            'Content-Transfer-Encoding: 7bit\n',
+            'to: ', to, '\n',
+            'from: ', from, '\n',
+            'subject: ', subject, '\n\n',
+            message
+        ].join('');
+        const encodedStr = new Buffer(str).toString('base64').replace(/\+/g, '-').replace(/\//g, '_');
+        return encodedStr;
     }
 }
 
