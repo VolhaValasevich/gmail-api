@@ -1,0 +1,10 @@
+.idea/
+.npmrc
+reports/
+node_modules/
+npm-debug.log
+report.json
+data.json
+cucumber_report.html
+combined.log
+MasterPO.json
