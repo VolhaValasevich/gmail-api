@@ -1,6 +1,7 @@
 .idea/
 .npmrc
 report/
+tokens/
 node_modules/
 npm-debug.log
 report.json

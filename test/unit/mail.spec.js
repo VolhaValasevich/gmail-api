@@ -4,23 +4,43 @@ const credentials = require('../../resources/credentials.json');
 const chai = require('chai');
 const expect = chai.expect;
 
+function getRandomString() {
+    return Math.random().toString(36).substring(2, 15);
+}
+
 describe('Gmail API', () => {
     let auth1, auth2, auth3;
 
     before(async () => {
         auth1 = await authorize(credentials.test1);
         auth2 = await authorize(credentials.test2);
-        auth3 = await authorize(credentials.test3);
     })
 
-    it('should send an email and recieve correct status code', async () => {
+    describe('should send a message with certain contents', async () => {
+
         const message = {
             to: 'test2mailapi@gmail.com',
             from: 'test1mailapi@gmail.com',
-            subject: 'sent by app',
-            message: 'hello world'
+            subject: getRandomString(),
+            message: getRandomString()
         }
-        const response = await mailFunctions.sendMessage(auth1, message);
-        expect(response.status).to.be.eql(200);
+        let response;
+
+        before(async () => {
+            response = await mailFunctions.sendMessage(auth1, message);
+        })
+
+        it('should send a message and recieve correct status code', async () => {
+            expect(response.status).to.be.eql(testData.messageWithContents.expectedStatusCode);
+        })
+
+        it('should send a message and recieve correct status text', async () => {
+            expect(response.statusText).to.be.eql(testData.messageWithContents.expectedStatusText);
+        })
+
+        it('should send a message with specific text', async () => {
+            const text = await mailFunctions.getTextOfMostRecentEmail(auth2);
+            expect(text).to.be.eql(message.message);
+        })
     })
 })
