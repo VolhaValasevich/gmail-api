@@ -31,11 +31,11 @@ describe('Gmail API', () => {
         })
 
         it('should send a message and recieve correct status code', async () => {
-            expect(response.status).to.be.eql(testData.messageWithContents.expectedStatusCode);
+            expect(response.status).to.be.eql(200);
         })
 
         it('should send a message and recieve correct status text', async () => {
-            expect(response.statusText).to.be.eql(testData.messageWithContents.expectedStatusText);
+            expect(response.statusText).to.be.eql('OK');
         })
 
         it('should send a message with specific text', async () => {
