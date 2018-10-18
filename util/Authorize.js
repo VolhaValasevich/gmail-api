@@ -25,20 +25,20 @@ function getNewToken(oAuth2Client, tokenPath) {
         access_type: 'offline',
         scope: SCOPES,
     });
-    logger.info('Authorize this app by visiting this url:', authUrl);
+    logger.info(`Authorize this app by visiting this url: ${authUrl}`);
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
     });
-    return new Promise((resolve, reject) => {
-        rl.question('Enter the code from that page here: ', (code) => {
-            rl.close();
+    rl.question('Enter the code from that page here: ', (code) => {
+        rl.close();
+        return new Promise((resolve, reject) => {
             oAuth2Client.getToken(code, (err, token) => {
-                if (err) reject('Error retrieving access token', err);
+                if (err) reject(err);
                 oAuth2Client.setCredentials(token);
                 // Store the token to disk for later program executions
                 fs.writeFileSync(tokenPath, JSON.stringify(token));
-                logger.info('Token stored to', tokenPath);
+                logger.info(`Token stored to [${tokenPath}]`);
                 resolve(oAuth2Client);
             });
         });
