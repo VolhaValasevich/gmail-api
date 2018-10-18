@@ -15,7 +15,7 @@ class MailFunctions {
                         logger.error('The API returned an error: ' + err);
                         reject(err);
                     }
-                    const messageRaw = response.data.payload.parts[0].body.data;;
+                    const messageRaw = response.data.payload.body.data;
                     const buff = new Buffer(messageRaw, 'base64');
                     const text = buff.toString();
                     resolve(text);
