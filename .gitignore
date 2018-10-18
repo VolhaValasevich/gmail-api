@@ -1,6 +1,6 @@
 .idea/
 .npmrc
-reports/
+report/
 node_modules/
 npm-debug.log
 report.json

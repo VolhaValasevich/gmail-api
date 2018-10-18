@@ -4,13 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node_modules\\.bin\\mocha ./test"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "chai": "^4.2.0",
     "googleapis": "^27.0.0",
+    "mocha": "^5.2.0",
+    "mochawesome": "^3.1.0",
     "winston": "^3.1.0"
   }
 }
