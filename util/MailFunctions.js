@@ -196,6 +196,43 @@ class MailFunctions {
         });
     }
 
+    changeLabels(auth, emailId, labelsToAdd, labelsToRemove) {
+        return new Promise((resolve, reject) => {
+            const gmail = google.gmail({ version: 'v1', auth });
+            gmail.users.messages.modify({
+                userId: 'me',
+                id: emailId,
+                resource: {
+                    addLabelIds: labelsToAdd,
+                    removeLabelIds: labelsToRemove
+                }
+            }, (err, res) => {
+                if (err) reject(err);
+                resolve(res);
+            })
+        })
+    }
+
+    getLabelsOnEmailWithSpecifiedSubject(auth, subject) {
+        return this.getEmailsListBySubject(auth, subject).then((emails) => {
+            if (emails.length === 0) throw new Error(`No emails with subject [${subject}] found in inbox`);
+            if (emails.length > 1) logger.warn(`More than one email with subject [${subject}] found in inbox. Getting labels from the latest email.`);
+            return emails[0].data.labelIds;
+        })
+    }
+
+    moveEmailWithSpecifiedSubjectToAnotherFolder(auth, subject, initFolder, destFolder) {
+        return this.getEmailsListBySubject(auth, subject).then((results) => {
+            let emailPromises = [];
+            if (results.length === 0) throw new Error(`No emails with subject [${subject}] found in inbox`);
+            if (results.length > 1) logger.warn(`More than one email with subject [${subject}] found in inbox. All emails will be moved.`);
+            results.forEach((email) => {
+                emailPromises.push(this.changeLabels(auth, email.data.id, destFolder, initFolder));
+            })
+            return Promise.all(emailPromises);
+        })
+    }
+
     encryptMessage(to, from, subject, message, attachPath) {
         const boundary = '__api_test__';
         let str = ['From: ' + from,

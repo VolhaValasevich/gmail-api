@@ -34,7 +34,7 @@ describe('Gmail API', () => {
 
     describe('check email contents', () => {
 
-        before(async() => {
+        before(async () => {
             await mailFunctions.checkMailForEmailWithSpecificSubject(auth2, message.subject, 5);
         })
 
@@ -48,14 +48,20 @@ describe('Gmail API', () => {
             expect(subject).to.be.eql(message.subject);
         })
 
-        it('should delete a message with specific subject', async() => {
+        it('should move an email to another folder', async () => {
+            await mailFunctions.moveEmailWithSpecifiedSubjectToAnotherFolder(auth2, message.subject, ['CATEGORY_SOCIAL'], ['CATEGORY_PERSONAL']);
+            const labels = await mailFunctions.getLabelsOnEmailWithSpecifiedSubject(auth2, message.subject);
+            expect(labels).to.include('CATEGORY_PERSONAL').and.to.not.include('CATEGORY_SOCIAL');
+        })
+
+        it('should delete a message with specific subject', async () => {
             await mailFunctions.deleteEmailWithSpecificSubject(auth2, message.subject);
             const result = await mailFunctions.checkIfMessageWithSpeciicSubjectIsDeleted(auth2, message.subject, 5);
             expect(result).to.be.eql('Email was successfully deleted.');
         })
     })
 
-    after(async() => {
+    after(async () => {
         await mailFunctions.deleteAllEmails(auth2);
     })
 })
