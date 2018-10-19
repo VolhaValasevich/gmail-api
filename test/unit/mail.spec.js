@@ -31,9 +31,20 @@ describe('Gmail API', () => {
         expect(response.statusText).to.be.eql('OK');
     })
 
-    it('should send a message with specific text', async () => {
-        await mailFunctions.checkMailForEmailWithSpecificSubject(auth2, message.subject, 5);
-        const text = await mailFunctions.getTextOfMostRecentEmail(auth2);
-        expect(text.replace('\r\n', '')).to.be.eql(message.message);
+    describe('check email contents', () => {
+
+        before(async() => {
+            await mailFunctions.checkMailForEmailWithSpecificSubject(auth2, message.subject, 5);
+        })
+
+        it('should send a message with specific text', async () => {
+            const text = await mailFunctions.getTextOfMostRecentEmail(auth2);
+            expect(text.replace('\r\n', '')).to.be.eql(message.message);
+        })
+
+        it('should send a message with specific subject', async () => {
+            const subject = await mailFunctions.getSubjectOfMostRecentEmail(auth2);
+            expect(subject).to.be.eql(message.subject);
+        })
     })
 })

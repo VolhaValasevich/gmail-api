@@ -17,6 +17,16 @@ class MailFunctions {
         })
     }
 
+    getSubjectOfMostRecentEmail(auth) {
+        return new Promise((resolve, reject) => {
+            return this.listMessages(auth).then((messages) => {
+                return this.getEmails(auth, messages).then((emails) => {
+                    resolve(this.getEmailSubject(emails[0]));
+                })
+            })
+        })
+    }
+
     listMessages(auth) {
         return new Promise((resolve, reject) => {
             const gmail = google.gmail({ version: 'v1', auth });
