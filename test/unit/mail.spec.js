@@ -47,6 +47,12 @@ describe('Gmail API', () => {
             const subject = await mailFunctions.getSubjectOfMostRecentEmail(auth2);
             expect(subject).to.be.eql(message.subject);
         })
+
+        it('should delete a message with specific subject', async() => {
+            await mailFunctions.deleteEmailWithSpecificSubject(auth2, message.subject);
+            const result = await mailFunctions.checkIfMessageWithSpeciicSubjectIsDeleted(auth2, message.subject, 5);
+            expect(result).to.be.eql('Email was successfully deleted.');
+        })
     })
 
     after(async() => {

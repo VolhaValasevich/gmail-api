@@ -39,7 +39,7 @@ class MailFunctions {
                     reject(err);
                 }
                 const messages = response.data.messages;
-                if (messages.length) {
+                if (messages) {
                     messages.forEach((message) => {
                         emailsArray.push(message);
                     })
@@ -126,7 +126,7 @@ class MailFunctions {
                     return this.getEmailsListBySubject(auth, subject).then((results) => {
                         if (results.length > 0) {
                             clearInterval(checkForEmail);
-                            return resolve();
+                            return resolve('Email was successfully deleted.');
                         }
                     });
                 }
@@ -147,6 +147,22 @@ class MailFunctions {
         })
     }
 
+    deleteEmailWithSpecificSubject(auth, subject) {
+        return this.listMessages(auth).then((emailsIdList) => {
+            return this.getEmails(auth, emailsIdList).then((emails) => {
+                let emailPromises = [];
+                const emailsWithSpecifiedSubject = this.getEmailsWithSpecifiedSubject(emails, subject);
+                if (emailsWithSpecifiedSubject.length === 0) throw new Error(`No emails with subject [${subject}] found in inbox`);
+                if (emailsWithSpecifiedSubject.length > 1) logger.warn(`More than one email with subject [${subject}] found in inbox. All emails will be deleted.`);
+                emailsWithSpecifiedSubject.forEach((email) => {
+                    emailPromises.push(this.deleteEmail(auth, email.data.id));
+                })
+                return Promise.all(emailPromises);
+                //console.log(emailsWithSpecifiedSubject);
+            })
+        })
+    }
+
     deleteAllEmails(auth) {
         return this.listMessages(auth).then((emailsIdList) => {
             if (!emailsIdList) return [];
@@ -156,6 +172,28 @@ class MailFunctions {
             })
             return Promise.all(emailPromises);
         })
+    }
+
+    checkIfMessageWithSpeciicSubjectIsDeleted(auth, subject, checkPeriodInSeconds) {
+        checkPeriodInSeconds = parseInt(checkPeriodInSeconds, 10);
+        let maxNumberOfChecks = Math.floor(checkPeriodInSeconds / 3);
+        let currentNumberOfChecks = 0;
+        return new Promise((resolve, reject) => {
+            let checkForEmail = setInterval(() => {
+                currentNumberOfChecks++;
+                if (currentNumberOfChecks > maxNumberOfChecks) {
+                    clearInterval(checkForEmail);
+                    return reject(`Email with [${subject}] subject was not removed from email inbox within ${checkPeriodInSeconds} seconds`);
+                } else {
+                    return this.getEmailsListBySubject(auth, subject).then((results) => {
+                        if (results.length === 0) {
+                            clearInterval(checkForEmail);
+                            return resolve('Email was successfully deleted.');
+                        }
+                    });
+                }
+            }, 3000);
+        });
     }
 
     encryptMessage(to, from, subject, message, attachPath) {
