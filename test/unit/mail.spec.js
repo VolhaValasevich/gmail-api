@@ -14,7 +14,8 @@ describe('Gmail API', () => {
         to: 'test2mailapi@gmail.com',
         from: 'test1mailapi@gmail.com',
         subject: getRandomString(),
-        message: getRandomString()
+        message: getRandomString(),
+        //attachPath: './resources/testData/1.jpg'
     }
 
     before(async () => {
@@ -46,5 +47,9 @@ describe('Gmail API', () => {
             const subject = await mailFunctions.getSubjectOfMostRecentEmail(auth2);
             expect(subject).to.be.eql(message.subject);
         })
+    })
+
+    after(async() => {
+        await mailFunctions.deleteAllEmails(auth2);
     })
 })

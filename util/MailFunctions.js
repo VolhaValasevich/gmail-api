@@ -1,5 +1,7 @@
 const { google } = require('googleapis');
 const logger = require('./logger').logger;
+const fs = require('fs');
+const path = require('fs');
 
 class MailFunctions {
 
@@ -9,7 +11,7 @@ class MailFunctions {
         return new Promise((resolve, reject) => {
             return this.listMessages(auth).then((messages) => {
                 return this.getEmails(auth, messages).then((emails) => {
-                    const buff = new Buffer(emails[0].data.payload.body.data, 'base64');
+                    const buff = new Buffer(emails[0].data.payload.parts[0].body.data, 'base64');
                     const text = buff.toString();
                     resolve(text);
                 })
@@ -91,7 +93,7 @@ class MailFunctions {
             auth: auth,
             userId: 'me',
             resource: {
-                raw: this.encryptMessage(content.to, content.from, content.subject, content.message)
+                raw: this.encryptMessage(content.to, content.from, content.subject, content.message, content.attachPath)
             }
         }
         return new Promise((resolve, reject) => {
@@ -132,15 +134,65 @@ class MailFunctions {
         });
     }
 
-    encryptMessage(to, from, subject, message) {
-        const str = ['Content-Type: text/plain; charset=\"UTF-8\"\n',
-            'MIME-Version: 1.0\n',
-            'Content-Transfer-Encoding: 7bit\n',
-            'to: ', to, '\n',
-            'from: ', from, '\n',
-            'subject: ', subject, '\n\n',
-            message
-        ].join('');
+    deleteEmail(auth, emailId) {
+        return new Promise((resolve, reject) => {
+            const gmail = google.gmail({ version: 'v1', auth });
+            gmail.users.messages.delete({
+                userId: 'me',
+                id: emailId
+            }, (err, response) => {
+                if (err) reject(err);
+                resolve(response);
+            })
+        })
+    }
+
+    deleteAllEmails(auth) {
+        return this.listMessages(auth).then((emailsIdList) => {
+            if (!emailsIdList) return [];
+            let emailPromises = [];
+            emailsIdList.forEach((email) => {
+                emailPromises.push(this.deleteEmail(auth, email.id));
+            })
+            return Promise.all(emailPromises);
+        })
+    }
+
+    encryptMessage(to, from, subject, message, attachPath) {
+        const boundary = '__api_test__';
+        let str = ['From: ' + from,
+        'To: ' + to,
+        `Subject: ${subject}`,
+            'MIME-Version: 1.0',
+        'Content-Type: multipart/mixed; boundary="' + boundary + '"',
+            '',
+        '--' + boundary,
+        'Content-Type: multipart/related; boundary="' + boundary + '"',
+            '',
+        '--' + boundary,
+        'Content-Type: multipart/alternative; boundary="' + boundary + '"',
+            '',
+        '--' + boundary,
+            'Content-Type: text/html; charset=utf-8',
+            '',
+            message, // html content.
+        ].join('\n');
+        if (attachPath) {
+            const attach = new Buffer(fs.readFileSync(attachPath));
+            str = [str, '',
+                '--' + boundary + '--',
+                '',
+                '--' + boundary + '--',
+                '',
+                '--' + boundary,
+                'Content-Type: image/jpeg;name="1.jpg"',
+                'Content-Transfer-Encoding: base64',
+                'Content-Disposition: attachment;filename="1.jpg"',
+                '',
+                attach,
+                '',
+                '--' + boundary + '--'].join('\n');
+        }
         const encodedStr = new Buffer(str).toString('base64').replace(/\+/g, '-').replace(/\//g, '_');
         return encodedStr;
     }
