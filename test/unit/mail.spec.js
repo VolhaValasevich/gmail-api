@@ -11,7 +11,7 @@ function getRandomString() {
 describe('Gmail API', () => {
     let auth1, auth2, auth3, response;
     const message = {
-        to: 'test2mailapi@gmail.com',
+        to: 'test2mailapi@gmail.com, test3mailapi@gmail.com',
         from: 'test1mailapi@gmail.com',
         subject: getRandomString(),
         message: getRandomString(),
@@ -21,6 +21,7 @@ describe('Gmail API', () => {
     before(async () => {
         auth1 = await authorize(credentials.test1);
         auth2 = await authorize(credentials.test2);
+        auth3 = await authorize(credentials.test3);
         response = await mailFunctions.sendMessage(auth1, message);
     })
 
@@ -59,9 +60,22 @@ describe('Gmail API', () => {
             const result = await mailFunctions.checkIfMessageWithSpeciicSubjectIsDeleted(auth2, message.subject, 5);
             expect(result).to.be.eql('Email was successfully deleted.');
         })
+
+        it('should be recieved by the second recipient with correct subject', async () => {
+            await mailFunctions.checkMailForEmailWithSpecificSubject(auth3, message.subject, 5);
+            const subject = await mailFunctions.getSubjectOfMostRecentEmail(auth3);
+            expect(subject).to.be.eql(message.subject);
+        })
+
+        it('should be recieved by the second recipient with correct body', async () => {
+            await mailFunctions.checkMailForEmailWithSpecificSubject(auth3, message.subject, 5);
+            const text = await mailFunctions.getTextOfMostRecentEmail(auth3);
+            expect(text.replace('\r\n', '')).to.be.eql(message.message);
+        })
     })
 
     after(async () => {
         await mailFunctions.deleteAllEmails(auth2);
+        await mailFunctions.deleteAllEmails(auth3);
     })
 })

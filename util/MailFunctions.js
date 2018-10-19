@@ -158,7 +158,6 @@ class MailFunctions {
                     emailPromises.push(this.deleteEmail(auth, email.data.id));
                 })
                 return Promise.all(emailPromises);
-                //console.log(emailsWithSpecifiedSubject);
             })
         })
     }
