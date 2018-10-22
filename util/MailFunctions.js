@@ -234,38 +234,31 @@ class MailFunctions {
 
     encryptMessage(to, from, subject, message, attachPath) {
         const boundary = '__api_test__';
-        let str = ['From: ' + from,
-        'To: ' + to,
-        `Subject: ${subject}`,
-            'MIME-Version: 1.0',
-        'Content-Type: multipart/mixed; boundary="' + boundary + '"',
-            '',
-        '--' + boundary,
-        'Content-Type: multipart/related; boundary="' + boundary + '"',
-            '',
-        '--' + boundary,
-        'Content-Type: multipart/alternative; boundary="' + boundary + '"',
-            '',
-        '--' + boundary,
-            'Content-Type: text/html; charset=utf-8',
-            '',
-            message, // html content.
-        ].join('\n');
+        let str = ['Content-Type: multipart/mixed; boundary="' + boundary + '"\r\n',
+        'MIME-Version: 1.0\r\n',
+        'From: ' + from + '\r\n',
+        'To: ' + to + '\r\n',
+        'Subject: ' + subject + '\r\n\r\n',
+      
+        '--' + boundary + '\r\n',
+        'Content-Type: text/plain; charset="UTF-8"\r\n',
+        'MIME-Version: 1.0\r\n',
+        'Content-Transfer-Encoding: 7bit\r\n\r\n',
+      
+        '' + message + '\r\n\r\n',
+        ].join('');
         if (attachPath) {
-            const attach = new Buffer(fs.readFileSync(attachPath));
-            str = [str, '',
-                '--' + boundary + '--',
-                '',
-                '--' + boundary + '--',
-                '',
-                '--' + boundary,
-                'Content-Type: image/jpeg;name="1.jpg"',
-                'Content-Transfer-Encoding: base64',
-                'Content-Disposition: attachment;filename="1.jpg"',
-                '',
-                attach,
-                '',
-                '--' + boundary + '--'].join('\n');
+            const attach = new Buffer(fs.readFileSync(attachPath)).toString('base64');
+            str = [str + '',
+            '--' + boundary + '\r\n',
+            'Content-Type: image/jpeg\r\n',
+            'MIME-Version: 1.0\r\n',
+            'Content-Transfer-Encoding: base64\r\n',
+            'Content-Disposition: attachment; filename="1.jpg"\r\n\r\n',
+          
+             attach, '\r\n\r\n',
+          
+             '--' + boundary + '--'].join('');
         }
         const encodedStr = new Buffer(str).toString('base64').replace(/\+/g, '-').replace(/\//g, '_');
         return encodedStr;
