@@ -2,6 +2,7 @@ const authorize = require('../../util/Authorize');
 const mailFunctions = require('../../util/MailFunctions');
 const credentials = require('../../resources/credentials.json');
 const chai = require('chai');
+const fs = require('fs');
 const expect = chai.expect;
 
 function getRandomString() {
@@ -15,7 +16,7 @@ describe('Gmail API', () => {
         from: 'test1mailapi@gmail.com',
         subject: getRandomString(),
         message: getRandomString(),
-        //attachPath: './resources/testData/1.jpg'
+        attachPath: './resources/testData/1.jpg'
     }
 
     before(async () => {
@@ -47,6 +48,12 @@ describe('Gmail API', () => {
         it('should send a message with specific subject', async () => {
             const subject = await mailFunctions.getSubjectOfMostRecentEmail(auth2);
             expect(subject).to.be.eql(message.subject);
+        })
+
+        it('should send a message with correct attachment', async () => {
+            const expectedAttachment = new Buffer(fs.readFileSync(message.attachPath)).toString('base64');
+            const attachment = await mailFunctions.getAttachmentsFromEmailWithSpecifiedSubject(auth2, message.subject);
+            expect(attachment.replace(/\-/g, '+').replace(/\_/g, '/')).to.be.eql(expectedAttachment);
         })
 
         it('should move an email to another folder', async () => {
